@@ -78,3 +78,18 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 5. **Review results**
     A graphical window will show up containing plots and other relavent information
 
+---
+
+## Remaining to Do List
+
+1. Develop MOPSO in mopso.py
+
+2. Connect MOPSO to main function and validate it runs
+
+3. Display MOPSO using matplotlib
+
+4. Setup the Multi-Run framework (100 runs of 100 iterations for example)
+
+5. Collect all run information into a dataframe or simple list (Pareto History, Run time information, and best run)
+
+6. Develop Mega-Graph Toolkit (A window that displays ALL revalent information)
