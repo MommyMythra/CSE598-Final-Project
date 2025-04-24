@@ -82,11 +82,11 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 
 ## Remaining to Do List
 
-1. Develop MOPSO in mopso.py
+1. ~Develop MOPSO in mopso.py~
 
-2. Connect MOPSO to main function and validate it runs
+2. ~Connect basic MOPSO to main function and validate it runs setup functions~
 
-3. Display MOPSO using matplotlib
+3. ~Display basic MOPSO using matplotlib~
 
 4. Setup the Multi-Run framework (100 runs of 100 iterations for example)
 
