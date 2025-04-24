@@ -1,5 +1,6 @@
 import numpy as np
 from moga import runMoga
+from mopso import runMopso
 
 # Schaffer Function at N=2. It will take in a single decision variable
 def schaffer(x):
@@ -65,12 +66,13 @@ functionSetup = {
         "Poloni": (poloni, [(-np.pi,np.pi)]*2, 2, 2)
         }
 
-testfunc, bounds, decision, objective = functionSetup["Poloni"]
+testfunc, bounds, decision, objective = functionSetup["Kursawe"]
 # Run pymoo
-result = runMoga(testfunc, bounds, decision)
+#result = runMoga(testfunc, bounds, decision)
+runMopso(testfunc, bounds, decision, objective)
 
 # Access final results
-print("Best decision variables (sample):")
-print(result.X[:5])
-print("Corresponding objectives:")
-print(result.F[:5])
+#print("Best decision variables (sample):")
+#print(result.X[:5])
+#print("Corresponding objectives:")
+#print(result.F[:5])
