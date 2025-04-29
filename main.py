@@ -38,29 +38,92 @@ def tnkCon(x):
     c2 = (x[0] - 0.5)**2 + (x[1] - 0.5)**2 - 0.5
     return (c1, c2)
 
+# 
+def standardizeData(data, func, algo, mopsoOut=None, mogaOut=None):
+    if func not in data:
+        data[func] = {}
+        if algo not in data[func]:
+            data[func][algo] = {
+                    "finalSols": [],
+                    "finalFronts": [],
+                    "runtimes": [],
+                    "histories": []
+                    }
+    if mopsoOut is not None:
+        result, run, arch = mopsoOut
+        if isinstance(result,tuple):
+            sols,fits = result
+            finalSols = np.array(sols)
+            finalFits = np.array(fits)
+        else:
+            print("This ain't right")
+            return
+        data[func][algo]["finalSols"].append(finalSols)
+        data[func][algo]["finalFronts"].append(finalFits)
+        data[func][algo]["runtimes"].append(run)
+        data[func][algo]["histories"].append(arch)
+    if mogaOut is not None:
+        finalSol = mogaOut.opt.get("X")
+        finalFront = mogaOut.opt.get("F")
+        run = mogaOut.exec_time
+
+        history = []
+        if hasattr(mogaOut, 'history') and mogaOut.history is not None:
+            for gen in mogaOut.history:
+                F = gen.opt.get("F")
+                history.append((gen.n_gen, F))
+        data[func][algo]["finalSols"].append(finalSol)
+        data[func][algo]["finalFronts"].append(finalFront)
+        data[func][algo]["runtimes"].append(run)
+        data[func][algo]["histories"].append(history)
+
+
 
 # Define function with bounds, decision variable count, objective count, constraint count, and constraint function evaluation. 
 
 functionSetup = {
-        "Zitzler-Deb-Thiele": (zdt2, [(0,1)]*30, 30, 2, 0, None),
-        "Kursawe": (kursawe, [(-5,5)]*3, 3, 2, 0, None),
-        "Tanaka": (tnk, [(0,np.pi)]*2, 2, 2, 2, tnkCon)
+        "zdt2": (zdt2, [(0,1)]*30, 30, 2, 0, None),
+        "kursawe": (kursawe, [(-5,5)]*3, 3, 2, 0, None),
+        "tnk": (tnk, [(0,np.pi)]*2, 2, 2, 2, tnkCon)
         }
 
-testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Tanaka"]
 # Set up the MULTIRUN framing
 runCount = int(input("Input Number of Runs per Test Function: "))
 genCount = int(input("Input number of Generations per Run: "))
-for j in range(3):
-    if j == 0:
-        testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Zitzler-Deb-Thiele"]
-    elif j == 1:
-        testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Kursawe"]
-    elif j == 2:
-        testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Tanaka"]
+
+# Set up Data dictionaries
+dataCol = {}
+for func in ["zdt2", "kursawe", "tnk"]:
+    dataCol[func] = {}
+    for algo in ["moga", "mopso"]:
+        dataCol[func][algo] = {
+                "finalSols" : [],
+                "finalFronts": [],
+                "runtimes": [],
+                "histories": []
+                }
+
+for funcName in ["zdt2", "kursawe", "tnk"]:
+    print(funcName, type(funcName))
+    testfunc, bounds, decision, objective, conNum, confunc = functionSetup[funcName]
     for i in range(runCount):
-        result = runMoga(testfunc, bounds, decision, confunc, nGen = genCount)
-        runMopso(testfunc, bounds, decision, objective, conNum, confunc, numGen = genCount)
+        resultGA = runMoga(testfunc, bounds, decision, confunc, nGen = genCount)
+        resultPSO = runMopso(testfunc, bounds, decision, objective, conNum, confunc, numGen = genCount)
+        standardizeData(
+                data = dataCol,
+                func = funcName,
+                algo = "moga",
+                mopsoOut = None,
+                mogaOut = resultGA
+                )
+        standardizeData(
+                data = dataCol,
+                func = funcName,
+                algo = "mopso",
+                mopsoOut = resultPSO,
+                mogaOut = None
+                )
+
 
 
 #problem = get_problem("tnk")

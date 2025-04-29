@@ -5,7 +5,6 @@ from pymoo.termination import get_termination
 from pymoo.visualization.scatter import Scatter
 from pymoo.algorithms.moo.nsga2 import NSGA2
 
-
 # Pymoo function wrapper. It will take in any test function and bounds and allow it to be properly run by pymoo. 
 class TestWrap(Problem):
     def __init__(self, userFunc, bounds, decision, constrFunc = None):
@@ -33,13 +32,13 @@ class TestWrap(Problem):
 def runMoga(userFunc, bounds, decision, confunc = None, nGen=100, popSize=100, showPlot=False):
     problem = TestWrap(userFunc, bounds, decision, confunc)
     algorithm = NSGA2(pop_size=popSize)
-
+    
     result = minimize(problem,
                       algorithm,
                       termination=get_termination("n_gen", nGen),
                       seed=1,
-                      verbose=True)
-
+                      save_history=True)
+    
     if showPlot:
         Scatter(title="Pareto Front").add(result.F).show()
 

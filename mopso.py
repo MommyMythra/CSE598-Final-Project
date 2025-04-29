@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 def constraintViolate(con):
     return sum(max(0,coni) for coni in con)
@@ -82,6 +83,9 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
     globDomFit = persDomFit.copy()
     globDomCon = persDomCon.copy()
 
+    # I don't necessarily care about the solution set, I just want the fitness history
+    FitArchive = []
+
     # Initialize w, c1, c2, Xo, and pert
     # This follows Optimized PSO weightings from Fuzhang Zhao
     #Xo = (np.sqrt(5)-1)/2
@@ -96,7 +100,7 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
     # Slip bounds
     lower = np.array([b[0] for b in bounds])
     upper = np.array([b[1] for b in bounds])
-
+    start = time.time()
     # Begin Optimization
     for gener in range(numGen):
         fitnesses = np.array([testFunc(x) for x in particles])
@@ -131,6 +135,7 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
         globDomCon = paretoCon
         crowd = computeCrowdDist(globDomFit)
         TheBest = globDomSol[np.argmax(crowd)]
+        FitArchive.append((gener, globDomFit))
         
         r1 = np.random.rand(numParticle, decision)
         r2 = np.random.rand(numParticle, decision)
@@ -148,8 +153,12 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
         particles += velocities
         for i in range(len(particles)):
             particles[i] = np.clip(particles[i], lower, upper)
+    end = time.time()
+    runtime = end-start
+    result = (globDomSol, globDomFit)
+    return [result, runtime, FitArchive]
 
-    print("Some final results?: ")
-    for pos, fit, con in zip(globDomSol, globDomFit, globDomCon):
-        print(f"x = {pos}, f = {fit}, con = {con}")
-    print(len(globDomSol))
+    #print("Some final results?: ")
+    #for pos, fit, con in zip(globDomSol, globDomFit, globDomCon):
+    #    print(f"x = {pos}, f = {fit}, con = {con}")
+    #print(len(globDomSol))

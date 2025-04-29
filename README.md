@@ -83,6 +83,8 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 
 4. ~Setup the Multi-Run framework (100 runs of 100 iterations for example)~
 
-5. Collect all run information into a dataframe or simple list (Pareto History, Run time information, and best run)
+5. ~Collect all run information into a dataframe or simple list (Pareto History, Run time information, and best run)~
+
+6. Process information and run calcs to finalize PLOTTING DATA
 
 6. Develop Mega-Graph Toolkit (A window that displays ALL revalent information)
