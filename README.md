@@ -87,4 +87,9 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 
 6. ~Process information and run calcs to finalize PLOTTING DATA~
 
-6. Develop Mega-Graph Toolkit (A window that displays ALL revalent information)
+7. ~Develop Mega-Graph Toolkit (A window that displays ALL revalent information)~
+
+8. Validate Proper running on sufficient test and apply patches as needed
+
+9. Clean up code, fix naming conventions, add/clean comments
+

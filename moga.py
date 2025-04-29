@@ -36,7 +36,6 @@ def runMoga(userFunc, bounds, decision, confunc = None, nGen=100, popSize=100, s
     result = minimize(problem,
                       algorithm,
                       termination=get_termination("n_gen", nGen),
-                      seed=1,
                       save_history=True)
     
     if showPlot:

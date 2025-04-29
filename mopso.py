@@ -130,24 +130,37 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
             paretoPos = paretoPos[topPar]
             paretoFit = paretoFit[topPar]
             paretoCon = paretoCon[topPar]
-        globDomPos = paretoPos
+        globDomSol = paretoPos
         globDomFit = paretoFit
         globDomCon = paretoCon
         crowd = computeCrowdDist(globDomFit)
-        TheBest = globDomSol[np.argmax(crowd)]
         FitArchive.append((gener, globDomFit))
+        finiteCrowd = crowd[np.isfinite(crowd)]
+        if len(finiteCrowd) == 0:
+            maxim = 1.0
+        else:
+            maxim = np.max(finiteCrowd)
+        crowd[np.isinf(crowd)] = maxim * 2
+        crowd += 1e-6
         
         r1 = np.random.rand(numParticle, decision)
         r2 = np.random.rand(numParticle, decision)
-
-        # Calculate the velocities using modified equations from Fuzhang Zhao
-        velocities = (
-                w * velocities +
-                #Xo * c1  * r1 * (persDomSol - particles) +
-                #Xo * c2  * r2 * (TheBest - particles)
-                c1 * r1 * (persDomSol - particles) +
-                c2 * r2 * (TheBest - particles)
-                )
+        
+        crowdSum = np.sum(crowd)
+        if crowdSum == 0.0:
+            prob = np.ones(len(crowd))/len(crowd)
+        else:
+            probOnCrowd = crowd / crowdSum
+        for i in range(numParticle):
+            leaderID = np.random.choice(len(globDomSol), p=probOnCrowd)
+            leader = globDomSol[leaderID]
+            velocities[i] = (w * velocities[i] + c1 * r1[i] * (persDomSol[i] - particles[i]) +
+            c2 * r2[i] * (leader - particles[i]))
+        #velocities = (
+        #        w * velocities +
+         #       c1 * r1 * (persDomSol - particles) +
+          #      c2 * r2 * (leader - particles)
+           #     )
         
         # Calc the final positions and BIND them
         particles += velocities
