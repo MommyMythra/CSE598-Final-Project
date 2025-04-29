@@ -2,10 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
+# Takes in the constraint scores and aggregate the pair based on whether
+# The constraint is violated (High score) or not (0 for negative)
+# Input:
+#        con: An a tuple that contains the constraint scores for one particle
+# Return:
+#        The summed value of the constraint scores
 def constraintViolate(con):
     return sum(max(0,coni) for coni in con)
 
 # MOGA has NSGA-II, which is Godly. Needs Crowding to be fair
+# This function, as a result, takes the fitnesses and scores them based on
+# Distance to other particle fitnesses
+# Input:
+#        Particles: An array of fitness Values
+# Output:
+#        distance: The aggregate distance scores for each particle
 def computeCrowdDist(Particles):
     """
     Compute the crowding distance for each point in F (N x M).
@@ -31,6 +43,15 @@ def computeCrowdDist(Particles):
 
     return distance
 
+# Takes in two particle fitnesses and their constraint scores to determine domination
+# Feasibility is accounted for here
+# Input:
+#       particleA: The fitness vector for particle A
+#       particleB: The fitness vector for particle B
+#       conA: The constraint scores for particle A
+#       conB: The constraint scores for particle B
+# Return:
+#       True or False: Based on whether A dominates B
 def domination(particleA,particleB, conA, conB):
     vioA = constraintViolate(conA)
     vioB = constraintViolate(conB)
@@ -43,6 +64,12 @@ def domination(particleA,particleB, conA, conB):
     else:
         return vioA < vioB
 
+# This function calculates the pareto frontier by storing indices
+# Input:
+#        Particles: An array containing the particle fitness scores
+#        Constraints: An array containing the particle constraint scores
+# Output:
+#        pareto: An array of indices for the pareto frontier
 def calcPareto(Particles, Constraints):
     pareto = []
     N = Particles.shape[0]
@@ -62,6 +89,19 @@ def calcPareto(Particles, Constraints):
     return pareto
 
 # The driver for the MOPSO
+# Has the following features and modifications: Crowding, Global Archive Pruning, random leader selection per particle
+# Boundary clipping on extreme edges.
+# Input:
+#       testFunc: The function that determines the fitness of a particle 
+#       bounds: The bounds array containing the (L,H) for each particle
+#       decision: The number of decision variables per particle
+#       objective: The number of object variables per particle
+#       conNum: The number of constraint values per particle
+#       conFun: The constraint function if applicable. Default is None
+#       numGen: The number of generations the MOPSO will run. Default is 100
+#       numParticle: The number of particles in the swarm. Default is 100
+# Output:
+#       A list containing: results (solution and fitness), runtime, and history
 def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, numGen=100, numParticle=100):
     # Initialize the population positions and velocities
     particles = np.array([[np.random.uniform(low,high) for (low,high) in bounds] for _ in range(numParticle)])
@@ -83,16 +123,10 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
     globDomFit = persDomFit.copy()
     globDomCon = persDomCon.copy()
 
-    # I don't necessarily care about the solution set, I just want the fitness history
+    # I don't necessarily care about the solution set history, I just want the fitness history
     FitArchive = []
 
-    # Initialize w, c1, c2, Xo, and pert
-    # This follows Optimized PSO weightings from Fuzhang Zhao
-    #Xo = (np.sqrt(5)-1)/2
-    #c1 = (np.sqrt(5)-1)/2
-    #c2 = (3-np.sqrt(5))/2
-    #w = 1-Xo
-    #pert = 2 + np.sqrt(5)
+    # Initialize w, c1, c2, and max archive
     w = 0.4
     c1 = 1.5
     c2 = 1.5
@@ -120,9 +154,6 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
         paretoPos = allParticle[paretoIndice]
         paretoFit = allFitness[paretoIndice]
         paretoCon = allCon[paretoIndice]
-
-        # Random best position for example
-        # Crowding REPLACEMENT
 
         if len(paretoIndice) > maxArchive:
             crowd1 = computeCrowdDist(paretoFit)
@@ -156,13 +187,6 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
             leader = globDomSol[leaderID]
             velocities[i] = (w * velocities[i] + c1 * r1[i] * (persDomSol[i] - particles[i]) +
             c2 * r2[i] * (leader - particles[i]))
-        #velocities = (
-        #        w * velocities +
-         #       c1 * r1 * (persDomSol - particles) +
-          #      c2 * r2 * (leader - particles)
-           #     )
-        
-        # Calc the final positions and BIND them
         particles += velocities
         for i in range(len(particles)):
             particles[i] = np.clip(particles[i], lower, upper)
@@ -170,8 +194,3 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
     runtime = end-start
     result = (globDomSol, globDomFit)
     return [result, runtime, FitArchive]
-
-    #print("Some final results?: ")
-    #for pos, fit, con in zip(globDomSol, globDomFit, globDomCon):
-    #    print(f"x = {pos}, f = {fit}, con = {con}")
-    #print(len(globDomSol))

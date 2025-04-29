@@ -17,8 +17,9 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 ---
 
 ## Specific Variable Definitions
-
-*To be determined*
+There are many variables used and defined throughout, but the major hyperparameters the user can control externally are:
+- genCount: the number of generations
+- runCount: the number of overarching runs
 
 ---
 
@@ -43,7 +44,11 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 
 ## Data Collected
 
-*To be determined*
+From each run, the following information is collected:
+1. The best pareto frontier
+2. The associated solutions
+3. The run time
+4. The history of pareto frontiers
 
 ---
 
@@ -68,8 +73,15 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
     ```bash
     python3 main.py
     ```
-5. **Review results**
+
+5. **Input required Parameters**
+    ```bash
+    Input Number of Runs per Test Function: <Type a number here. I recommend 5-20>
+    Input number of Generations per Run: <Type a number here. I recommend 50-100>
+    ```
+6. **Review results**
     A graphical window will show up containing plots and other relavent information
+    The information will be saved to relevant PNGs and a textfile
 
 ---
 
@@ -89,7 +101,10 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 
 7. ~Develop Mega-Graph Toolkit (A window that displays ALL revalent information)~
 
-8. Validate Proper running on sufficient test and apply patches as needed
+8. ~Validate Proper running on sufficient test and apply patches as needed~
 
-9. Clean up code, fix naming conventions, add/clean comments
+9. ~Clean up code, fix naming conventions, add/clean comments~
 
+10. ~Fix the Requirements~
+
+11. ~Fixed Readme to be accurate and complete~

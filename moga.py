@@ -28,8 +28,9 @@ class TestWrap(Problem):
         if self.constrFunc is not None:
             out["G"] = np.array([self.constrFunc(x) for x in X])
 
-# This function runs the pymoo instance. You can pass in any
-def runMoga(userFunc, bounds, decision, confunc = None, nGen=100, popSize=100, showPlot=False):
+# This function runs the pymoo instance. It defaults to the provided NSGA-II, 100 generations, and 100 pop size. 
+# It does collect history for graphs later
+def runMoga(userFunc, bounds, decision, confunc = None, nGen=100, popSize=100):
     problem = TestWrap(userFunc, bounds, decision, confunc)
     algorithm = NSGA2(pop_size=popSize)
     
@@ -38,7 +39,4 @@ def runMoga(userFunc, bounds, decision, confunc = None, nGen=100, popSize=100, s
                       termination=get_termination("n_gen", nGen),
                       save_history=True)
     
-    if showPlot:
-        Scatter(title="Pareto Front").add(result.F).show()
-
     return result

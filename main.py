@@ -43,6 +43,14 @@ def tnkCon(x):
     return (c1, c2)
 
 
+# This function will take all the ugly, variable data and convert it
+# to a standard form for processing
+# Input:
+#       data: The culminating structure set up elsewhere
+#       func: The name of the test function
+#       algo: The name of the algorithm (MOGA/MOPSO)
+#       mopsoOut: The output data for the MOPSO. None default
+#       mogaOut: The output data for the MOGA. None default
 def standardizeData(data, func, algo, mopsoOut=None, mogaOut=None):
     if func not in data:
         data[func] = {}
@@ -55,7 +63,6 @@ def standardizeData(data, func, algo, mopsoOut=None, mogaOut=None):
                     }
     if mopsoOut is not None:
         result, run, arch = mopsoOut
-        #print(result)
         if isinstance(result,tuple):
             sols,fits = result
             finalSols = np.array(sols)
@@ -82,7 +89,12 @@ def standardizeData(data, func, algo, mopsoOut=None, mogaOut=None):
         data[func][algo]["runtimes"].append(run)
         data[func][algo]["histories"].append(history)
 
-
+# Takes the standardized data and processes it into a secondary form for graphing. Some information may not be used
+# Input:
+#       data: The standardized data structure
+#       refFront: The reference problem to get the reference front from Pymoo
+# Return:
+#       process: The processed data structure
 def processData(data, refFront):
     process = {}
     for funcName, algo in data.items():
@@ -98,10 +110,7 @@ def processData(data, refFront):
             avgRun = sum(runtimes) / len(runtimes)
 
             igdCalc = IGDPlus(ref)
-            #print(len(finalFront))
             igdScores = [igdCalc(front) for front in finalFront]
-            #print(finalFront)
-            #print(igdScores)
 
             bestID = int(np.argmin(igdScores))
             bestRunFit = finalFront[bestID]
@@ -152,13 +161,13 @@ for func in ["zdt2", "kursawe", "tnk"]:
                 "histories": []
                 }
 
+# Run the algorithms
 for funcName in ["zdt2", "kursawe", "tnk"]:
     testfunc, bounds, decision, objective, conNum, confunc = functionSetup[funcName]
     for i in range(runCount):
         print(f'Current Run for function {funcName}: {i}')
         resultGA = runMoga(testfunc, bounds, decision, confunc, nGen = genCount)
         resultPSO = runMopso(testfunc, bounds, decision, objective, conNum, confunc, numGen = genCount)
-        #print(resultPSO)
         standardizeData(
                 data = dataCol,
                 func = funcName,
@@ -175,17 +184,25 @@ for funcName in ["zdt2", "kursawe", "tnk"]:
                 )
 
 
+# Set up the reference fronts
 refFront = {
         "zdt2": get_problem("zdt2").pareto_front(),
         "kursawe": get_problem("kursawe").pareto_front(),
         "tnk": get_problem("tnk").pareto_front()
         }
 
+# Obtain the processed data
 Processed = processData(dataCol, refFront)
 
 
 ####################################################### THE GRAPHING AND OUTPUT FOR THIS BAD BOY ####################################################################
-def plot_runtime(processed, func):
+# Plots the runtime plots for comparison
+# Input:
+#       processed: the processed data structure
+#       func: The test function being drawn
+# Return:
+#       fig: The generated figure
+def plotRuntime(processed, func):
     fig, ax = plt.subplots()
     for algo, data in processed[func].items():
         y = data['runtimes']
@@ -195,9 +212,17 @@ def plot_runtime(processed, func):
     ax.set_xlabel('Run Index')
     ax.set_ylabel('Time (s)')
     ax.legend()
+    fig.savefig(f"output/{func}_runtime.png", bbox_inches="tight")
     return fig
 
-def plot_best_fronts(processed, ref, func):
+# Plots the best pareto frontiers from each algo and the reference front
+# Input:
+#       processed: the processed data structure
+#       ref: the reference frontier
+#       func: The test function being drawn
+# Return:
+#       fig: The generated figure
+def plotBestFronts(processed, ref, func):
     fig, ax = plt.subplots()
     ax.scatter(ref[func][:,0], ref[func][:,1], c='k', marker='x', label='Reference PF')
     for algo, data in processed[func].items():
@@ -206,9 +231,17 @@ def plot_best_fronts(processed, ref, func):
     ax.set_xlabel('Objective 1')
     ax.set_ylabel('Objective 2')
     ax.legend()
+    fig.savefig(f"output/{func}_front.png", bbox_inches="tight")
     return fig
 
-def plot_igd_convergence(processed, func):
+# Plots the IGD+ values calculated earlier for comparison. Specifically the generation by generation
+# values for each best run
+# Input:
+#       processed: the processed data structure
+#       func: The test function being drawn
+# Return:
+#       fig: The generated figure
+def plotIGDConvergence(processed, func):
     fig, ax = plt.subplots()
     for algo, data in processed[func].items():
         gens, vals = zip(*data['igdHist'])
@@ -217,9 +250,16 @@ def plot_igd_convergence(processed, func):
     ax.set_xlabel('Generation')
     ax.set_ylabel('IGD+')
     ax.legend()
+    fig.savefig(f"output/{func}_IGDConverge.png", bbox_inches="tight")
     return fig
 
-def plot_all_igd(processed, func):
+# Plots every run's IGD+ value for comparison.
+# Input:
+#       processed: the processed data structure
+#       func: The test function being drawn
+# Return:
+#       fig: The generated figure
+def plotAllIgd(processed, func):
     fig, ax = plt.subplots()
     for algo, data in processed[func].items():
         y = data['runtimes']
@@ -229,46 +269,98 @@ def plot_all_igd(processed, func):
     ax.set_xlabel('Run Index')
     ax.set_ylabel('IGD+')
     ax.legend()
+    fig.savefig(f"output/{func}_allIGD.png", bbox_inches="tight")
     return fig
 
-# ========== GUI SETUP ==========
+# The generation of the summary text for reporting later
+# Input:
+#       processed: The processed data 
+#       func: The test function
+# output:
+#       The summary text
+def generateSummaryText(processed, func):
+    lines = [f"Summary for {func}:\n"]
+    for algo, data in processed[func].items():
+        best_runtime = min(data['runtimes'])
+        avg_runtime = data['avgRun']
+        best_igd = min(data['igdScores'])
+        avg_igd = sum(data['igdScores']) / len(data['igdScores'])
+        lines.append(
+            f"{algo}:\n"
+            f"  Best Runtime: {best_runtime:.4f} s\n"
+            f"  Average Runtime: {avg_runtime:.4f} s\n"
+            f"  Best IGD+: {best_igd:.4f}\n"
+            f"  Average IGD+: {avg_igd:.4f}\n"
+        )
+    return "\n".join(lines)
 
-def embed_plot(tab, fig):
+###################################### GUI SETUP ###############################
+
+# Create a final tab that contains the summary text
+# Input:
+#       parent: The parent window
+#       processed: The processed data
+def addSummaryTab(parent, processed):
+    summaryTab = ttk.Notebook(parent)
+    parent.add(summaryTab, text="Summary Stats")
+
+    for func in processed.keys():
+        tab = ttk.Frame(summaryTab)
+        summaryTab.add(tab, text=func)
+
+        textBox = tk.Text(tab, wrap="word", font=("Courier", 10))
+        textBox.pack(expand=True, fill="both")
+        summary = generateSummaryText(processed, func)
+        textBox.insert("1.0", summary)
+        textBox.config(state=tk.DISABLED)
+        with open(f"output/{func}_summary.txt", "w") as f:
+            f.write(summary)
+
+# This function embeds plots into the tabs
+# Input:
+#       tab: The tab embedding into
+#       fig: The figure that is getting embedded
+def embedPlot(tab, fig):
     canvas = FigureCanvasTkAgg(fig, master=tab)
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-def build_gui(processed, reference_fronts):
+# This function builds the GUI and passes data
+# Input:
+#       processed: The processed data
+#       refFronts: The reference pareto frontiers
+def buildGui(processed, refFronts):
     root = tk.Tk()
     root.title("Multi-Objective Optimization Dashboard")
     notebook = ttk.Notebook(root)
 
     categories = ["Runtimes", "Pareto Frontiers", "IGD+ Graphs"]
-    plot_funcs = {
-        "Runtimes": [plot_runtime],
-        "Pareto Frontiers": [plot_best_fronts],
-        "IGD+ Graphs": [plot_igd_convergence, plot_all_igd],
+    plotFuncs = {
+        "Runtimes": [plotRuntime],
+        "Pareto Frontiers": [plotBestFronts],
+        "IGD+ Graphs": [plotIGDConvergence, plotAllIgd],
     }
 
     for category in categories:
-        cat_tab = ttk.Notebook(notebook)
-        notebook.add(cat_tab, text=category)
+        catTab = ttk.Notebook(notebook)
+        notebook.add(catTab, text=category)
 
         for func in processed.keys():
-            func_tab = ttk.Notebook(cat_tab)
-            cat_tab.add(func_tab, text=func)
+            funcTab = ttk.Notebook(catTab)
+            catTab.add(funcTab, text=func)
 
-            for plot_func in plot_funcs[category]:
-                plot_tab = ttk.Frame(func_tab)
-                func_tab.add(plot_tab, text=plot_func.__name__.replace("plot_", "").replace("_", " ").title())
+            for plotFunc in plotFuncs[category]:
+                plotTab = ttk.Frame(funcTab)
+                funcTab.add(plotTab, text=plotFunc.__name__.replace("plot_", "").replace("_", " ").title())
 
-                if 'ref' in plot_func.__code__.co_varnames:
-                    fig = plot_func(processed, reference_fronts, func)
+                if 'ref' in plotFunc.__code__.co_varnames:
+                    fig = plotFunc(processed, refFronts, func)
                 else:
-                    fig = plot_func(processed, func)
-                embed_plot(plot_tab, fig)
+                    fig = plotFunc(processed, func)
+                embedPlot(plotTab, fig)
 
     notebook.pack(expand=1, fill="both")
+    addSummaryTab(notebook, processed)
     root.mainloop()
-build_gui(Processed, refFront)
+buildGui(Processed, refFront)
 
