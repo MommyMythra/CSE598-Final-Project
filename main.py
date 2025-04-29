@@ -3,7 +3,7 @@ from moga import runMoga
 from mopso import runMopso
 from pymoo.problems import get_problem
 from pymoo.util.plotting import plot
-
+from pymoo.indicators.igd_plus import IGDPlus
 # Zitzler-Deb-Thiele Function at N=2
 # It will take in a vector of 30 decision variables
 def zdt2(x):
@@ -38,7 +38,7 @@ def tnkCon(x):
     c2 = (x[0] - 0.5)**2 + (x[1] - 0.5)**2 - 0.5
     return (c1, c2)
 
-# 
+
 def standardizeData(data, func, algo, mopsoOut=None, mogaOut=None):
     if func not in data:
         data[func] = {}
@@ -78,9 +78,49 @@ def standardizeData(data, func, algo, mopsoOut=None, mogaOut=None):
         data[func][algo]["histories"].append(history)
 
 
+def processData(data, refFront):
+    process = {}
+    for funcName, algo in data.items():
+        process[funcName] = {}
+
+        ref = refFront[funcName]
+        for algoName, runs, in algo.items():
+            runtimes = runs["runtimes"]
+            finalFront = runs["finalFronts"]
+            finalSol = runs["finalSols"]
+            hist = runs["histories"]
+            
+            avgRun = sum(runtimes) / len(runtimes)
+
+            igdCalc = IGDPlus(ref)
+            igdScores = [igdCalc(front) for front in finalFront]
+
+            bestID = int(np.argmin(igdScores))
+            bestRunFit = finalFront[bestID]
+            bestRunSol = finalSol[bestID]
+            bestRunIGD = igdScores[bestID]
+
+            bestHist = hist[bestID]
+
+            igdHist = []
+            for (gen,front) in bestHist:
+               igdVal = igdCalc(front)
+               igdHist.append((gen,igdVal))
+            
+            process[funcName][algoName] = {
+                    "runtimes": runtimes,
+                    "avgRun": avgRun,
+                    "finalFront": finalFront,
+                    "avgFront": np.vstack(finalFront),
+                    "bestRunSol": bestRunSol,
+                    "bestRunFit": bestRunFit,
+                    "bestHist": bestHist,
+                    "bestRunIGD": bestRunIGD,
+                    "igdHist": igdHist
+                    }
+    return process
 
 # Define function with bounds, decision variable count, objective count, constraint count, and constraint function evaluation. 
-
 functionSetup = {
         "zdt2": (zdt2, [(0,1)]*30, 30, 2, 0, None),
         "kursawe": (kursawe, [(-5,5)]*3, 3, 2, 0, None),
@@ -104,7 +144,6 @@ for func in ["zdt2", "kursawe", "tnk"]:
                 }
 
 for funcName in ["zdt2", "kursawe", "tnk"]:
-    print(funcName, type(funcName))
     testfunc, bounds, decision, objective, conNum, confunc = functionSetup[funcName]
     for i in range(runCount):
         resultGA = runMoga(testfunc, bounds, decision, confunc, nGen = genCount)
@@ -125,7 +164,14 @@ for funcName in ["zdt2", "kursawe", "tnk"]:
                 )
 
 
+refFront = {
+        "zdt2": get_problem("zdt2").pareto_front(),
+        "kursawe": get_problem("kursawe").pareto_front(),
+        "tnk": get_problem("tnk").pareto_front()
+        }
 
+Processed = processData(dataCol, refFront)
+print(Processed)
 #problem = get_problem("tnk")
 #plot(problem.pareto_front(), no_fill=True)
 
