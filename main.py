@@ -1,22 +1,8 @@
 import numpy as np
 from moga import runMoga
 from mopso import runMopso
-
-# Schaffer Function at N=2. It will take in a single decision variable
-def schaffer(x):
-    x = x[0] if isinstance(x, (list, np.ndarray)) else x  # support vector input
-
-    if x <= 1:
-        f1 = -x
-    elif x <= 3:
-        f1 = x - 2
-    elif x <= 4:
-        f1 = 4 - x
-    else:
-        f1 = x - 4
-
-    f2 = (x - 5)**2
-    return (f1, f2)
+from pymoo.problems import get_problem
+from pymoo.util.plotting import plot
 
 # Zitzler-Deb-Thiele Function at N=2
 # It will take in a vector of 30 decision variables
@@ -39,37 +25,46 @@ def kursawe(x):
         f2 += temp
     return (f1, f2)
 
-# Viennet Function is diabolical with three objectives and two decision variables.
-def viennet(x):
-    f1 = 0.5 * (x[0]**2 + x[1]**2) + np.sin(x[0]**2 + x[1]**2)
-    f2 = ((3 * x[0] - 2 * x[1] + 4)**2 / 8) + ((x[0] - x[1] + 1)**2 / 27) + 15
-    f3 = (1 / (x[0]**2 + x[1]**2 + 1)) - 1.1 * np.exp(-(x[0]**2 + x[1]**2))
-    return (f1, f2, f3)
-
-# Poloni Function has two objectives and two decision variables as a vector
-def poloni(x):
-    A1 = 0.5 * np.sin(1) - 2 * np.cos(1) + np.sin(2) - 1.5 * np.cos(2)
-    A2 = 1.5 * np.sin(1) - np.cos(1) + 2 * np.sin(2) - 0.5 * np.cos(2)
-    B1 = 0.5 * np.sin(x[0]) - 2 * np.cos(x[0]) + np.sin(x[1]) - 1.5 * np.cos(x[1])
-    B2 = 1.5 * np.sin(x[0]) - np.cos(x[0]) + 2 * np.sin(x[1]) - 0.5 * np.cos(x[1])
-    f1 = 1 + (A1 - B1)**2 + (A2 - B2)**2
-    f2 = (x[0] + 3)**2 + (x[1] + 1)**2
+# Tanaka, or TNK, is a twin minimization function with complex constraint space
+def tnk(x):
+    f1 = x[0]
+    f2 = x[1]
     return (f1, f2)
 
-# Define function with bounds, decision variable count, objective count
+# Tanaka Constraint funciton
+def tnkCon(x):
+    arctan = np.arctan2(x[0],x[1])
+    c1 = -(x[0]**2 + x[1]**2 - 1 - (0.1 * np.cos(16 * arctan)))
+    c2 = (x[0] - 0.5)**2 + (x[1] - 0.5)**2 - 0.5
+    return (c1, c2)
+
+
+# Define function with bounds, decision variable count, objective count, constraint count, and constraint function evaluation. 
 
 functionSetup = {
-        "Schaffer": (schaffer, [(-5,10)], 1, 2),
-        "Zitzler-Deb-Thiele": (zdt2, [(0,1)]*30, 30, 2),
-        "Kursawe": (kursawe, [(-5,5)]*3, 3, 2),
-        "Viennet": (viennet,[(-3,3)]*2, 2, 3),
-        "Poloni": (poloni, [(-np.pi,np.pi)]*2, 2, 2)
+        "Zitzler-Deb-Thiele": (zdt2, [(0,1)]*30, 30, 2, 0, None),
+        "Kursawe": (kursawe, [(-5,5)]*3, 3, 2, 0, None),
+        "Tanaka": (tnk, [(0,np.pi)]*2, 2, 2, 2, tnkCon)
         }
 
-testfunc, bounds, decision, objective = functionSetup["Kursawe"]
-# Run pymoo
-#result = runMoga(testfunc, bounds, decision)
-runMopso(testfunc, bounds, decision, objective)
+testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Tanaka"]
+# Set up the MULTIRUN framing
+runCount = int(input("Input Number of Runs per Test Function: "))
+genCount = int(input("Input number of Generations per Run: "))
+for j in range(3):
+    if j == 0:
+        testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Zitzler-Deb-Thiele"]
+    elif j == 1:
+        testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Kursawe"]
+    elif j == 2:
+        testfunc, bounds, decision, objective, conNum, confunc = functionSetup["Tanaka"]
+    for i in range(runCount):
+        result = runMoga(testfunc, bounds, decision, confunc, nGen = genCount)
+        runMopso(testfunc, bounds, decision, objective, conNum, confunc, numGen = genCount)
+
+
+#problem = get_problem("tnk")
+#plot(problem.pareto_front(), no_fill=True)
 
 # Access final results
 #print("Best decision variables (sample):")

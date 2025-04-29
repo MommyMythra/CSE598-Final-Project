@@ -23,28 +23,21 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 ---
 
 ## Test Functions
-
-1. **Schaffer Function**
-   - N = 2
-   - 1 decision variable
-   - 2 objectives  
-
-2. **Zitzler–Deb–Thiele’s Function (ZDT)**
+1. **Zitzler–Deb–Thiele’s Function (ZDT)**
    - N = 2
    - 30 decision variables
-   - 2 objectives  
+   - 2 objectives 
+   - 0 Constraints
 
-3. **Kursawe Function**
+2. **Kursawe Function**
    - 3 decision variables
-   - 2 objectives  
+   - 2 objectives
+   - 0 Constraints
 
-4. **Viennet Function**
-   - 2 decision variables
-   - 3 objectives  
-
-5. **Poloni’s Two-Objective Function**
+3. **Tanaka Function**
    - 2 decision variables
    - 2 objectives  
+   - 2 Constraints
 
 ---
 
@@ -88,7 +81,7 @@ The goal is to evaluate the performance of these two multi-objective optimizatio
 
 3. ~Display basic MOPSO using matplotlib~
 
-4. Setup the Multi-Run framework (100 runs of 100 iterations for example)
+4. ~Setup the Multi-Run framework (100 runs of 100 iterations for example)~
 
 5. Collect all run information into a dataframe or simple list (Pareto History, Run time information, and best run)
 
