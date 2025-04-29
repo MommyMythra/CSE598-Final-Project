@@ -96,7 +96,7 @@ def runMopso(testFunc, bounds, decision, objective, conNum = 0, conFun = None, n
     w = 0.4
     c1 = 1.5
     c2 = 1.5
-    maxArchive = 250
+    maxArchive = 200
     # Slip bounds
     lower = np.array([b[0] for b in bounds])
     upper = np.array([b[1] for b in bounds])
