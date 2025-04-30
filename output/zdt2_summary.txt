@@ -1,0 +1,13 @@
+Summary for zdt2:
+
+moga:
+  Best Runtime: 0.8508 s
+  Average Runtime: 0.8865 s
+  Best IGD+: 0.0211
+  Average IGD+: 0.0303
+
+mopso:
+  Best Runtime: 0.5676 s
+  Average Runtime: 32.6874 s
+  Best IGD+: 0.0024
+  Average IGD+: 0.3174

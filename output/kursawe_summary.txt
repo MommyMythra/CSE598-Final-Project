@@ -1,0 +1,13 @@
+Summary for kursawe:
+
+moga:
+  Best Runtime: 0.9529 s
+  Average Runtime: 1.0146 s
+  Best IGD+: 0.0206
+  Average IGD+: 0.0228
+
+mopso:
+  Best Runtime: 5.2079 s
+  Average Runtime: 5.9390 s
+  Best IGD+: 0.0541
+  Average IGD+: 0.0628

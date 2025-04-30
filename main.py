@@ -25,7 +25,7 @@ def kursawe(x):
         f1 += temp
     f2 = 0
     for j in range(0,3):
-        temp = np.abs(x[i])**0.8 + 5 * np.sin(x[i]**3)
+        temp = np.abs(x[j])**0.8 + 5 * np.sin(x[j]**3)
         f2 += temp
     return (f1, f2)
 

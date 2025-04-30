@@ -1,0 +1,13 @@
+Summary for tnk:
+
+moga:
+  Best Runtime: 1.0935 s
+  Average Runtime: 1.1487 s
+  Best IGD+: 0.0030
+  Average IGD+: 0.0034
+
+mopso:
+  Best Runtime: 2.4400 s
+  Average Runtime: 3.0119 s
+  Best IGD+: 0.0059
+  Average IGD+: 0.0070
